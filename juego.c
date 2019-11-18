@@ -23,10 +23,18 @@ int comparar_elementos(void* elemento_1, void* elemento_2){
     return IGUALES;
 }
 
-void destruir_elemento(void* elemento){
-    if(elemento != NULL){
-    	free(elemento);
+void destruir_persona(void* persona){
+    if(persona != NULL){
+    	free(persona);
     }
+}
+
+void destruir_casa(void* casa){
+	if(casa != NULL){
+		//free(((casa_t*)casa)->nombre);
+		lista_destruir(((casa_t*)casa)->lista_personas);
+		free(((casa_t*)casa));
+	}
 }
 
 bool es_comando_valido(char accion){
@@ -78,30 +86,30 @@ int main(int argc, char *argv[]){
 	size_t max_personas = 0;
 	char casa_gobernadora[MAX_NOMBRE];
 	
-	abb_t* arbol_casas = arbol_crear(comparar_elementos, destruir_elemento);
+	abb_t* arbol_casas = arbol_crear(comparar_elementos, destruir_casa);
 	if(arbol_casas == NULL){
 		imprimir_mensaje_error("crear", "arbol_casas");
 		return ERROR;
 	}
 
-	cola_t* casas_extintas = cola_crear(destruir_elemento);
+	cola_t* casas_extintas = cola_crear(destruir_casa);
 	if(casas_extintas == NULL){
 		arbol_destruir(arbol_casas);
 		imprimir_mensaje_error("crear", "casas_extintas");
 		return ERROR;
 	}
 
-	if(inicializar_reino(arbol_casas, casa_gobernadora, &max_personas, destruir_elemento) == EXITO){
+	if(inicializar_reino(arbol_casas, casa_gobernadora, &max_personas, destruir_persona) == EXITO){
 		mostrar_introduccion();
 		mostrar_menu_ayudas();
 
-		determinar_accion(arbol_casas, casas_extintas, casa_gobernadora, &max_personas, destruir_elemento);
-
-		terminar_simulacion(arbol_casas, casas_extintas);
+		determinar_accion(arbol_casas, casas_extintas, casa_gobernadora, &max_personas, destruir_persona);
 	}
-	else{
+	else{	
 		centrar_mensaje("Hubo un error al inicializar el reino", "  No se pudo comenzar la simulación");
 	}
+	
+	terminar_simulacion(arbol_casas, casas_extintas);
 	
 	return 0;
 }

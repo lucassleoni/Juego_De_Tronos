@@ -62,10 +62,11 @@ int agregar_personas(FILE* reino, lista_t* lista_personas, size_t* cant_personas
 
 	int estado = EXITO;
 	int persona_leida = fscanf(reino, FORMATO_PERSONA, &codigo, nombre_persona, &edad);
-	while((persona_leida = CAMPOS_PERSONA) && (estado == EXITO)){
+
+	while((codigo == C_PERSONA) && (persona_leida = CAMPOS_PERSONA) && (estado == EXITO)){
 		persona = crear_persona(nombre_persona, edad);
 		estado = lista_insertar(lista_personas, persona);
-
+		
 		persona_leida = fscanf(reino, FORMATO_PERSONA, &codigo, nombre_persona, &edad);
 	}
 
@@ -103,13 +104,15 @@ int agregar_casas(FILE* archivo, abb_t* arbol_casas, char casa_gobernadora[MAX_N
 
 	int estado = EXITO;
 	int casa_leida = fscanf(archivo, FORMATO_CASAS, &codigo, nombre_casa, &factor_env, &factor_nac);
-	while((casa_leida == CAMPOS_CASA) && (estado == EXITO)){
+
+	while((codigo == C_CASA) && (casa_leida == CAMPOS_CASA) && (estado == EXITO)){
 		casa = arbol_buscar(arbol_casas, nombre_casa);
 		if(casa == NULL){
 			casa = crear_casa(nombre_casa, factor_env, factor_nac, destructor);
 		}
 
 		estado = agregar_personas(archivo, casa->lista_personas, &(casa->cant_personas));
+		
 		if(estado == EXITO){
     		casa->es_casa_extinta = false;
 			arbol_insertar(arbol_casas, casa);
@@ -139,6 +142,7 @@ int inicializar_reino(abb_t* arbol_casas, char casa_gobernadora[MAX_NOMBRE], siz
 	}
 
 	int estado = agregar_casas(reino, arbol_casas, casa_gobernadora, max_personas, destructor);
+
 	fclose(reino);
 
 	return estado;
@@ -357,18 +361,10 @@ void mostrar_casas_extintas(cola_t* casas_extintas){
 }
 
 void terminar_simulacion(abb_t* arbol_casas, cola_t* casas_extintas){
-	casa_t** casas = NULL;
-	int tope_array = arbol_cantidad(arbol_casas);
-
-	arbol_recorrido_inorden(arbol_casas, (void**)casas, tope_array);
-	
-	for(int i = 0; i < tope_array; i++){
-		lista_destruir(casas[i]->lista_personas);
-	}
-
 	arbol_destruir(arbol_casas);
 	cola_destruir(casas_extintas);
 
-	system("clear");
-	centrar_mensaje("Simulación terminada", "");
+	//system("clear");
+	//centrar_mensaje("Simulación terminada", "");
+	printf("\n\nSimulación terminada\n\n");
 }

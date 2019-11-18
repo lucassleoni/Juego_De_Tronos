@@ -12,23 +12,3 @@ juego: compile
 valgrind: compile
 	clear
 	valgrind --leak-check=full --track-origins=yes --show-reachable=yes ./juego
-
-S: compile
-	clear
-	./juego S
-
-A: compile
-	clear
-	./juego A
-
-L: compile
-	clear
-	./juego L
-
-E: compile
-	clear
-	./juego E
-
-Q: compile
-	clear
-	./juego Q

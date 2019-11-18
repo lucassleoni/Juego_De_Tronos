@@ -28,12 +28,15 @@
 #define FINALIZAR 'Q'
 #define AYUDAS    'H'
 
+#define C_PERSONA 'I'
+#define C_CASA 	  'C'
+
 #define M_LECTURA "r"
 #define M_AGREGAR "a"
 #define F_CASAS   "casas.txt"
 #define F_NOMBRES "nombres.txt"
-#define CREAR "crear"
-#define ARCHIVO "archivo"
+#define CREAR 	  "crear"
+#define ARCHIVO   "archivo"
 
 #define FORMATO_CASAS   "%c;%[^;];%zu;%zu\n"
 #define FORMATO_PERSONA "%c;%[^;];%zu\n"
