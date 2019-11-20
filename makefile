@@ -3,7 +3,7 @@ CFLAGS = -std=c99 -Wall -Wconversion -Wtype-limits -pedantic -Werror -O0
 
 compile: juego.c trono.c
 	clear
-	$(CC) $(CFLAGS) *.c -o juego -g
+	$(CC) *.c -o juego -g
 
 juego: compile
 	clear

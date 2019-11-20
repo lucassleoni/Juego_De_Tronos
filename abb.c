@@ -38,6 +38,7 @@ abb_t* arbol_crear(abb_comparador comparador, abb_liberar_elemento destructor){
 	arbol->nodo_raiz = NULL;
 	arbol->comparador = comparador;
 	arbol->destructor = destructor;
+    arbol->cantidad_elementos = 0;
 
 	return arbol;
 }
