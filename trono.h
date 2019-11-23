@@ -40,7 +40,7 @@
 
 #define FORMATO_CASAS   "%[^;];%zu;%zu\n"
 #define FORMATO_PERSONA "%[^;];%zu\n"
-#define FORMATO_NOMBRES "%s\n"
+#define FORMATO_NOMBRES "%[^\n]\n"
 
 
 typedef struct persona{
@@ -57,6 +57,14 @@ typedef struct casa{
 	lista_t* lista_personas;
 } casa_t;
 
+typedef struct reino{
+	abb_t* arbol_casas;
+	cola_t* casas_extintas;
+	char* casa_gobernadora;
+} reino_t;
+
+int comparar_elementos(void* elemento_1, void* elemento_2);
+
 void destruir_casa(void* casa);
 
 void imprimir_mensaje_error(char error[MAX_NOMBRE], char nombre[MAX_NOMBRE]);
@@ -65,15 +73,17 @@ void mostrar_introduccion();
 
 void mostrar_menu_ayudas();
 
-int iniciar_simulacion(abb_t* arbol_casas, cola_t* casas_extintas);
+reino_t* inicializar_reino();
 
-int agregar_nueva_casa(abb_t* arbol_casas);
+int iniciar_simulacion(reino_t* reino);
+
+int agregar_casas(abb_t* arbol_casas);
 
 int listar_casas(abb_t* arbol_casas);
 
 void mostrar_casas_extintas(cola_t* casas_extintas);
 
-void terminar_simulacion(abb_t* arbol_casas, cola_t* casas_extintas);
+void terminar_simulacion(reino_t* reino);
 
 void centrar_mensaje(char mensaje_1[], char mensaje_2[]);
 

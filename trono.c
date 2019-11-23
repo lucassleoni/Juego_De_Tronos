@@ -40,6 +40,34 @@ void imprimir_mensaje_error(char error[MAX_NOMBRE], char nombre[MAX_NOMBRE]){
 	printf("Finalizando programa...\n");
 }
 
+reino_t* inicializar_reino(){
+	reino_t* reino = malloc(sizeof(reino_t));
+	if(reino == NULL){
+		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
+		return NULL;
+	}
+
+	reino->arbol_casas = arbol_crear(comparar_elementos, destruir_casa);
+	if((reino->arbol_casas) == NULL){
+		free(reino);
+		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
+		return NULL;
+	}
+
+	reino->casas_extintas = cola_crear(destruir_casa);
+	if((reino->casas_extintas) == NULL){ 
+		arbol_destruir(reino->arbol_casas);
+		free(reino);
+		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
+		return NULL;
+	}
+
+	reino->casa_gobernadora = "Ninguna";
+
+	return reino;
+}
+
+
 persona_t* crear_persona(char* nombre_persona, size_t edad){
 	persona_t* persona = malloc(sizeof(persona_t));
     if(persona == NULL){
@@ -59,9 +87,27 @@ int agregar_persona(FILE* reino, char* nombre_persona, size_t edad, lista_t* lis
 	if(persona == NULL){
 		return ERROR;
 	}
+
+	estado = lista_insertar(lista_personas, (void*)persona);
 	(*cant_personas) = lista_elementos(lista_personas);
 
-	return lista_insertar(lista_personas, (void*)persona);
+	return estado;
+
+}
+
+int comparar_elementos(void* elemento_1, void* elemento_2){
+    if((elemento_1 == NULL) || (elemento_2 == NULL)){
+		return ERROR;
+    }
+    
+    if(strcmp((((casa_t*)elemento_1)->nombre), (((casa_t*)elemento_2)->nombre)) > 0){
+		return PRIMERO_ES_MAYOR;
+    }
+    else if(strcmp((((casa_t*)elemento_1)->nombre), (((casa_t*)elemento_2)->nombre)) < 0){
+		return PRIMERO_ES_MENOR;
+    }
+
+    return IGUALES;
 }
 
 void destruir_casa(void* casa){
@@ -101,7 +147,7 @@ casa_t* crear_casa(char* nombre_casa, size_t factor_env, size_t factor_nac){
     return casa;
 }
 
-int agregar_casas(FILE* archivo, abb_t* arbol_casas){
+int insertar_casas(FILE* archivo, abb_t* arbol_casas){
 	casa_t* casa = NULL;
 	char codigo;
 	char nombre_casa[MAX_NOMBRE], nombre_persona[MAX_NOMBRE];
@@ -112,10 +158,10 @@ int agregar_casas(FILE* archivo, abb_t* arbol_casas){
 	int leido = fscanf(archivo, "%c;", &codigo);
 	while((leido == 1) && (estado == EXITO)){
 		if(codigo == C_CASA){
-			int leido_casas = fscanf(archivo, FORMATO_CASAS, nombre_casa, &factor_env, &factor_nac);
-			
+			fscanf(archivo, FORMATO_CASAS, nombre_casa, &factor_env, &factor_nac);
 			casa = crear_casa(strdup(nombre_casa), factor_env, factor_nac);
 			casa_t* casa_buscada = arbol_buscar(arbol_casas, casa);
+
 			if(casa_buscada == NULL){
 				casa->es_casa_extinta = false;
 				arbol_insertar(arbol_casas, casa);
@@ -126,8 +172,8 @@ int agregar_casas(FILE* archivo, abb_t* arbol_casas){
 			}
 
 		}
-		else{
-			int leido_persona = fscanf(archivo, FORMATO_PERSONA, nombre_persona, &edad);
+		else if(codigo == C_PERSONA){
+			fscanf(archivo, FORMATO_PERSONA, nombre_persona, &edad);
 			estado = agregar_persona(archivo, nombre_persona, edad, casa->lista_personas, &(casa->cant_personas));
 		}
 
@@ -143,7 +189,7 @@ int agregar_casas(FILE* archivo, abb_t* arbol_casas){
 	return EXITO;
 }
 
-int agregar_nueva_casa(abb_t* arbol_casas){
+int agregar_casas(abb_t* arbol_casas){
 	//system("clear");
 
 	char f_nombre[MAX_NOMBRE] = "casas.txt";
@@ -152,20 +198,20 @@ int agregar_nueva_casa(abb_t* arbol_casas){
 	scanf("%s", f_nombre);
 	*/
 
-	FILE* nueva_casa = fopen(f_nombre, M_LECTURA);
-	if(nueva_casa == NULL){
+	FILE* f_casas = fopen(f_nombre, M_LECTURA);
+	if(f_casas == NULL){
 		imprimir_mensaje_error(ARCHIVO, f_nombre);
 		return ERROR;
 	}
 
-	int estado = agregar_casas(nueva_casa, arbol_casas);
+	int estado = insertar_casas(f_casas, arbol_casas);
 
-	fclose(nueva_casa);
+	fclose(f_casas);
 
 	return estado;
 }
 
-void actualizar_casas_extintas(abb_t* arbol_casas, cola_t* casas_extintas, casa_t* casa){
+void actualizar_casas_extintas(cola_t* casas_extintas, casa_t* casa){
 	casa_t* casa_copia = crear_casa(strdup(casa->nombre), casa->factor_env, casa->factor_nac);
 	
 	if((casa->cant_personas) == 0){
@@ -200,11 +246,11 @@ void actualizar_personas(lista_t* lista_personas, size_t factor_env){
 	actualizar_decesos(lista_personas, posiciones_a_borrar, tope_borrados);
 }
 
-void actualizar_casas(casa_t** casas, abb_t* arbol_casas, cola_t* casas_extintas, int tope_array){
+void actualizar_casas(reino_t* reino, casa_t** casas, int tope_array){
 	for(size_t i = 0; i < tope_array; i++){
 		actualizar_personas(casas[i]->lista_personas, casas[i]->factor_env);
 		casas[i]->cant_personas = lista_elementos(casas[i]->lista_personas);
-		actualizar_casas_extintas(arbol_casas, casas_extintas, casas[i]);
+		actualizar_casas_extintas(reino->casas_extintas, casas[i]);
 	}
 }
 
@@ -232,20 +278,21 @@ char* generar_nombre(){
 		return NULL;
 	}
 
-	char* nombre_en_archivo = NULL;
+	char* nombre_en_archivo;
 	int random = rand() % CANT_NOMBRES;
-
-	for(int i = 0; i < random; i++){
+	
+	while(random > 0){
 		fscanf(nombres, FORMATO_NOMBRES, nombre_en_archivo);
+		random--;
 	}
 	
 	fclose(nombres);
 
-	return strdup(nombre_en_archivo);
+	return nombre_en_archivo;
 }
 
 void actualizar_nacimientos(casa_t** casas, int tope_array){
-	char* nombre;
+	//char* nombre;
 	size_t cantidad_a_nacer;
 	
 	for(int i = 0; i < tope_array; i++){
@@ -253,10 +300,8 @@ void actualizar_nacimientos(casa_t** casas, int tope_array){
 		for(int j = 0; j < cantidad_a_nacer; j++){
 			//nombre = generar_nombre();
 			
-			if(nombre != NULL){
-				persona_t* persona = crear_persona(NULL, 0);
+				persona_t* persona = crear_persona(strdup("Klaus"), 0);
 				lista_insertar(casas[i]->lista_personas, persona);
-			}
 		}
 	}
 }
@@ -270,48 +315,47 @@ void determinar_casa_gobernadora(casa_t** casas, char casa_gobernadora[MAX_NOMBR
 	}
 }
 
-int simular_tiempo(abb_t* arbol_casas, cola_t* casas_extintas, size_t anios_simulados, char casa_gobernadora[MAX_NOMBRE]){
-	casa_t* casas[arbol_cantidad(arbol_casas)];
-	int tope_array = arbol_cantidad(arbol_casas);
+int simular_tiempo(reino_t* reino, size_t anios_simulados){
+	int tope_array = arbol_cantidad(reino->arbol_casas);
+	casa_t* casas[tope_array];
 	
-	int elementos_recorridos = arbol_recorrido_inorden(arbol_casas, (void**)casas, tope_array);
+	int elementos_recorridos = arbol_recorrido_inorden(reino->arbol_casas, (void**)casas, tope_array);
 	if(elementos_recorridos != tope_array){
 		return ERROR;
 	}
 
 	for(size_t i = 0; i < anios_simulados; i++){
-		actualizar_casas(casas, arbol_casas, casas_extintas, tope_array);
-		actualizar_vector_casas(arbol_casas, casas, &tope_array);
+		actualizar_casas(reino, casas, tope_array);
+		actualizar_vector_casas(reino->arbol_casas, casas, &tope_array);
 		actualizar_nacimientos(casas, tope_array);
-	}	
-	
+	}
+
 	size_t max_personas = 0;
-	determinar_casa_gobernadora(casas, casa_gobernadora, tope_array, &max_personas);
+	determinar_casa_gobernadora(casas, reino->casa_gobernadora, tope_array, &max_personas);
 	
 	return EXITO;
 }
 
-int iniciar_simulacion(abb_t* arbol_casas, cola_t* casas_extintas){
-	if(arbol_vacio(arbol_casas)){
+int iniciar_simulacion(reino_t* reino){
+	if(arbol_vacio(reino->arbol_casas)){
 		//system("clear");
 		printf("\n\n\n\n\n\nNo hay ninguna casa presente en el reino.\n\n\n\n\n\n");
 	}
 
 	else{
-		char casa_gobernadora[MAX_NOMBRE];
 		size_t anios_simulados = 0;
 		
 		printf("Ingresar cantidad de años a transcurrir: ");
 		scanf("%zu", &anios_simulados);
 
-		if(simular_tiempo(arbol_casas, casas_extintas, anios_simulados, casa_gobernadora) == ERROR){
+		if(simular_tiempo(reino, anios_simulados) == ERROR){
 			printf("Hubo una falla al simular el tiempo solicitado, no se puede continuar.\n");
 			return ERROR;
 		}
 
-		if(arbol_cantidad(arbol_casas)){
+		if(arbol_cantidad(reino->arbol_casas)){
 			//system("clear");
-			printf("\nQuien controla Trono de Hierro ahora es la casa %s\n\n", casa_gobernadora);
+			printf("\nQuien controla Trono de Hierro ahora es la casa %s\n\n", reino->casa_gobernadora);
 		}
 		else{
 			//system("clear");
@@ -322,22 +366,14 @@ int iniciar_simulacion(abb_t* arbol_casas, cola_t* casas_extintas){
 	return EXITO;
 }
 
-void swap(void* elemento_1, void* elemento_2){			// Revisar
-	void* elemento_aux;
-
-	elemento_aux = elemento_1;
-	elemento_1 = elemento_2;
-	elemento_2 = elemento_aux;
-}
-
 void ordenar_descentemente(casa_t** casas, int tope_array){
 	bool esta_ordenado = false;
 
 	for(int i = 0; i < tope_array; i++){
 		int max_integrantes = casas[i]->cant_personas;
 		int posicion_swap = -1;
+		
 		for(int j = i + 1; j < tope_array; j++){
-
 			if(casas[j]->cant_personas > max_integrantes){
 				max_integrantes = casas[j]->cant_personas;
 				posicion_swap = j;
@@ -345,10 +381,9 @@ void ordenar_descentemente(casa_t** casas, int tope_array){
 		}
 
 		if(posicion_swap != -1){
-				casa_t* temp = casas[i];
-				casas[i] = casas[posicion_swap];
-				casas[posicion_swap] = temp;
-		//		swap(casas[i], casas[posicion_swap])
+			casa_t* temp = casas[i];
+			casas[i] = casas[posicion_swap];
+			casas[posicion_swap] = temp;
 		}
 	}
 }
@@ -400,9 +435,10 @@ void mostrar_casas_extintas(cola_t* casas_extintas){
 	}
 }
 
-void terminar_simulacion(abb_t* arbol_casas, cola_t* casas_extintas){
-	arbol_destruir(arbol_casas);
-	cola_destruir(casas_extintas);
+void terminar_simulacion(reino_t* reino){
+	arbol_destruir(reino->arbol_casas);
+	cola_destruir(reino->casas_extintas);
+	free(reino);
 
 	//centrar_mensaje("Simulación terminada", "");
 	printf("\nSimulación terminada\n\n");
