@@ -40,61 +40,6 @@ void imprimir_mensaje_error(char error[MAX_NOMBRE], char nombre[MAX_NOMBRE]){
 	printf("Finalizando programa...\n");
 }
 
-reino_t* inicializar_reino(){
-	reino_t* reino = malloc(sizeof(reino_t));
-	if(reino == NULL){
-		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
-		return NULL;
-	}
-
-	reino->arbol_casas = arbol_crear(comparar_elementos, destruir_casa);
-	if((reino->arbol_casas) == NULL){
-		free(reino);
-		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
-		return NULL;
-	}
-
-	reino->casas_extintas = cola_crear(destruir_casa);
-	if((reino->casas_extintas) == NULL){ 
-		arbol_destruir(reino->arbol_casas);
-		free(reino);
-		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
-		return NULL;
-	}
-
-	reino->casa_gobernadora = "Ninguna";
-
-	return reino;
-}
-
-
-persona_t* crear_persona(char* nombre_persona, size_t edad){
-	persona_t* persona = malloc(sizeof(persona_t));
-    if(persona == NULL){
-    	imprimir_mensaje_error(CREAR, "persona_t persona");
-		return NULL;
-    }
-
-    persona->nombre = nombre_persona;
-    persona->edad = edad;
-
-    return persona;
-}
-
-int agregar_persona(FILE* reino, char* nombre_persona, size_t edad, lista_t* lista_personas, size_t* cant_personas){
-	int estado = EXITO;
-	persona_t* persona = crear_persona(strdup(nombre_persona), edad);
-	if(persona == NULL){
-		return ERROR;
-	}
-
-	estado = lista_insertar(lista_personas, (void*)persona);
-	(*cant_personas) = lista_elementos(lista_personas);
-
-	return estado;
-
-}
-
 int comparar_elementos(void* elemento_1, void* elemento_2){
     if((elemento_1 == NULL) || (elemento_2 == NULL)){
 		return ERROR;
@@ -123,6 +68,59 @@ void destruir_persona(void* persona){
     	free(((persona_t*)persona)->nombre);
     	free((persona_t*)persona);
     }
+}
+
+reino_t* inicializar_reino(){
+	reino_t* reino = malloc(sizeof(reino_t));
+	if(reino == NULL){
+		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
+		return NULL;
+	}
+
+	reino->arbol_casas = arbol_crear(comparar_elementos, destruir_casa);
+	if((reino->arbol_casas) == NULL){
+		free(reino);
+		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
+		return NULL;
+	}
+
+	reino->casas_extintas = cola_crear(destruir_casa);
+	if((reino->casas_extintas) == NULL){ 
+		arbol_destruir(reino->arbol_casas);
+		free(reino);
+		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
+		return NULL;
+	}
+
+	reino->casa_gobernadora = NULL;
+
+	return reino;
+}
+
+persona_t* crear_persona(char* nombre_persona, size_t edad){
+	persona_t* persona = malloc(sizeof(persona_t));
+    if(persona == NULL){
+    	imprimir_mensaje_error(CREAR, "persona_t persona");
+		return NULL;
+    }
+
+    persona->nombre = nombre_persona;
+    persona->edad = edad;
+
+    return persona;
+}
+
+int agregar_persona(FILE* reino, char* nombre_persona, size_t edad, lista_t* lista_personas, size_t* cant_personas){
+	int estado = EXITO;
+	persona_t* persona = crear_persona(strdup(nombre_persona), edad);
+	if(persona == NULL){
+		return ERROR;
+	}
+
+	estado = lista_insertar(lista_personas, (void*)persona);
+	(*cant_personas) = lista_elementos(lista_personas);
+
+	return estado;
 }
 
 casa_t* crear_casa(char* nombre_casa, size_t factor_env, size_t factor_nac){
@@ -212,9 +210,8 @@ int agregar_casas(abb_t* arbol_casas){
 }
 
 void actualizar_casas_extintas(cola_t* casas_extintas, casa_t* casa){
-	casa_t* casa_copia = crear_casa(strdup(casa->nombre), casa->factor_env, casa->factor_nac);
-	
 	if((casa->cant_personas) == 0){
+		casa_t* casa_copia = crear_casa(strdup(casa->nombre), casa->factor_env, casa->factor_nac);
 		casa->es_casa_extinta = true;
 		cola_encolar(casas_extintas, casa_copia);
 	}
@@ -233,7 +230,7 @@ void actualizar_personas(lista_t* lista_personas, size_t factor_env){
 	
 	while(lista_iterador_tiene_siguiente(iterador)){
 		persona_t* persona = lista_iterador_siguiente(iterador);
-		
+
 		persona->edad += factor_env;
 		if((persona->edad) >= MAX_VIDA){
 			posiciones_a_borrar[tope_borrados] = contador_posicion;
@@ -271,52 +268,51 @@ void actualizar_vector_casas(abb_t* arbol_casas, casa_t** casas, int* tope_array
 	}
 }
 
-char* generar_nombre(){
-	FILE* nombres = fopen(F_NOMBRES, M_LECTURA);
+int generar_nombre(char nombres[CANT_NOMBRES][MAX_NOMBRE]){
+	FILE* f_nombres = fopen(F_NOMBRES, M_LECTURA);
 	if(nombres == NULL){
 		imprimir_mensaje_error(ARCHIVO, F_NOMBRES);
-		return NULL;
+		return ERROR;
 	}
 
-	char* nombre_en_archivo;
-	int random = rand() % CANT_NOMBRES;
-	
-	while(random > 0){
-		fscanf(nombres, FORMATO_NOMBRES, nombre_en_archivo);
-		random--;
+	for(int i = 0; i < CANT_NOMBRES; i++){
+		fscanf(f_nombres, FORMATO_NOMBRES, nombres[i]);
 	}
 	
-	fclose(nombres);
-
-	return nombre_en_archivo;
+	fclose(f_nombres);
+	
+	return (rand() % CANT_NOMBRES);
 }
 
 void actualizar_nacimientos(casa_t** casas, int tope_array){
-	//char* nombre;
+	char nombres[CANT_NOMBRES][MAX_NOMBRE];
 	size_t cantidad_a_nacer;
 	
 	for(int i = 0; i < tope_array; i++){
 		cantidad_a_nacer = (casas[i]->cant_personas) / (casas[i]->factor_nac);
+		
 		for(int j = 0; j < cantidad_a_nacer; j++){
-			//nombre = generar_nombre();
-			
-				persona_t* persona = crear_persona(strdup("Klaus"), 0);
-				lista_insertar(casas[i]->lista_personas, persona);
+			int pos_nombre = generar_nombre(nombres);
+			persona_t* persona = crear_persona(strdup(nombres[pos_nombre]), 0);
+			lista_insertar(casas[i]->lista_personas, persona);
 		}
 	}
 }
 
-void determinar_casa_gobernadora(casa_t** casas, char casa_gobernadora[MAX_NOMBRE], int tope_array, size_t* max_personas){
+void determinar_casa_gobernadora(casa_t** casas, char** casa_gobernadora, int tope_array){
+	size_t max_personas = 0;
+
 	for(int i = 0; i < tope_array; i++){
-		if((casas[i]->cant_personas) > (*max_personas)){
-			(*max_personas) = (casas[i]->cant_personas);
-			strcpy(casa_gobernadora, casas[i]->nombre);
+		if((casas[i]->cant_personas) > max_personas){
+			max_personas = (casas[i]->cant_personas);
+			(*casa_gobernadora) = casas[i]->nombre;
 		}
 	}
 }
 
 int simular_tiempo(reino_t* reino, size_t anios_simulados){
 	int tope_array = arbol_cantidad(reino->arbol_casas);
+
 	casa_t* casas[tope_array];
 	
 	int elementos_recorridos = arbol_recorrido_inorden(reino->arbol_casas, (void**)casas, tope_array);
@@ -330,18 +326,16 @@ int simular_tiempo(reino_t* reino, size_t anios_simulados){
 		actualizar_nacimientos(casas, tope_array);
 	}
 
-	size_t max_personas = 0;
-	determinar_casa_gobernadora(casas, reino->casa_gobernadora, tope_array, &max_personas);
-	
+	determinar_casa_gobernadora(casas, &(reino->casa_gobernadora), tope_array);
+
 	return EXITO;
 }
 
 int iniciar_simulacion(reino_t* reino){
 	if(arbol_vacio(reino->arbol_casas)){
-		//system("clear");
+		//	("clear");
 		printf("\n\n\n\n\n\nNo hay ninguna casa presente en el reino.\n\n\n\n\n\n");
 	}
-
 	else{
 		size_t anios_simulados = 0;
 		
@@ -355,7 +349,7 @@ int iniciar_simulacion(reino_t* reino){
 
 		if(arbol_cantidad(reino->arbol_casas)){
 			//system("clear");
-			printf("\nQuien controla Trono de Hierro ahora es la casa %s\n\n", reino->casa_gobernadora);
+			printf("\nQuien controla Trono de Hierro ahora es la casa %s\n\n", (reino->casa_gobernadora));
 		}
 		else{
 			//system("clear");
@@ -407,6 +401,8 @@ int listar_casas(abb_t* arbol_casas){
 		for(int i = 0; i < tope_array; i++){
 			printf("Casa N° %i: %s (%zu integrantes)\n", (i+1), (casas[i]->nombre), (casas[i]->cant_personas));
 		}
+
+		printf("\n");
 	}
 
 	return EXITO;
@@ -432,13 +428,17 @@ void mostrar_casas_extintas(cola_t* casas_extintas){
 			i++;
 			cant_casas--;
 		}
+
+		printf("\n");
 	}
 }
 
 void terminar_simulacion(reino_t* reino){
-	arbol_destruir(reino->arbol_casas);
-	cola_destruir(reino->casas_extintas);
-	free(reino);
+	if(reino != NULL){
+		arbol_destruir(reino->arbol_casas);
+		cola_destruir(reino->casas_extintas);
+		free(reino);
+	}
 
 	//centrar_mensaje("Simulación terminada", "");
 	printf("\nSimulación terminada\n\n");

@@ -190,7 +190,7 @@ void* arbol_buscar_recursiva(nodo_abb_t* raiz, void* elemento_buscado, abb_compa
     }
 
     if((comparador(elemento_buscado, raiz->elemento) == IGUALES)){
-        return elemento_buscado;
+        return raiz->elemento;
     }
     else if((comparador(elemento_buscado, raiz->elemento) == PRIMERO_ES_MAYOR)){
         return arbol_buscar_recursiva(raiz->derecha, elemento_buscado, comparador);

@@ -348,7 +348,9 @@ void* lista_iterador_siguiente(lista_iterador_t* iterador){
  * Libera la memoria reservada por el iterador.
  */
 void lista_iterador_destruir(lista_iterador_t* iterador){
-	free(iterador);
+	if(iterador){	
+		free(iterador);
+	}
 }
 
 /*

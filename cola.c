@@ -138,5 +138,6 @@ void cola_destruir(cola_t* cola){
 	while(!cola_vacia(cola)){
 		cola_desencolar(cola);
 	}
+	
 	free(cola);
 }
