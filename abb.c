@@ -84,7 +84,7 @@ void arbol_insertar_recursiva(nodo_abb_t* raiz, nodo_abb_t* nuevo_nodo, abb_comp
  * El árbol admite elementos con valores repetidos.
  */
 int arbol_insertar(abb_t* arbol, void* elemento){
-	if((arbol == NULL) || (elemento == NULL)){
+	if((arbol == NULL) || (elemento == NULL) || ((arbol->comparador) == NULL)){
 		return ERROR;
 	}
 
@@ -172,7 +172,7 @@ int arbol_borrar_recursiva(nodo_abb_t* raiz, nodo_abb_t** nodo_padre, void* elem
  * Devuelve 0 si pudo eliminar el elemento o -1 en caso contrario.
  */
 int arbol_borrar(abb_t* arbol, void* elemento){
-    if(arbol_vacio(arbol)){
+    if(arbol_vacio(arbol) || ((arbol->comparador) == NULL)){
         return ERROR;
     }
 
@@ -207,7 +207,7 @@ void* arbol_buscar_recursiva(nodo_abb_t* raiz, void* elemento_buscado, abb_compa
  * Devuelve el elemento encontrado o NULL si no lo encuentra.
  */
 void* arbol_buscar(abb_t* arbol, void* elemento){
-	if((arbol_vacio(arbol)) || (elemento == NULL)){
+	if((arbol_vacio(arbol)) || (elemento == NULL) || ((arbol->comparador) == NULL)){
 		return NULL;
 	}
 
@@ -443,7 +443,7 @@ void arbol_postorden(nodo_abb_t* raiz, bool (*funcion)(void*, void*), void* extr
  * ABB_RECORRER_POSTORDEN = 2.
 */
 void abb_con_cada_elemento(abb_t* arbol, int recorrido, bool (*funcion)(void*, void*), void* extra){
-    if(arbol_vacio(arbol)){
+    if(arbol_vacio(arbol) || (funcion == NULL)){
         return;
     }
 

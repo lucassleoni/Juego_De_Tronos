@@ -219,7 +219,7 @@ void actualizar_casas_extintas(cola_t* casas_extintas, casa_t* casa){
 
 void actualizar_decesos(lista_t* lista_personas, size_t* posiciones_a_borrar, size_t tope_borrados){
 	for(int i = 0; i < tope_borrados; i++){
-		lista_borrar_de_posicion(lista_personas, posiciones_a_borrar[i]);
+		lista_borrar_de_posicion(lista_personas, posiciones_a_borrar[i] - i);
 	}
 }
 
@@ -290,7 +290,7 @@ void actualizar_nacimientos(casa_t** casas, int tope_array){
 	
 	for(int i = 0; i < tope_array; i++){
 		cantidad_a_nacer = (casas[i]->cant_personas) / (casas[i]->factor_nac);
-		
+
 		for(int j = 0; j < cantidad_a_nacer; j++){
 			int pos_nombre = generar_nombre(nombres);
 			persona_t* persona = crear_persona(strdup(nombres[pos_nombre]), 0);
@@ -307,6 +307,7 @@ void determinar_casa_gobernadora(casa_t** casas, char** casa_gobernadora, int to
 			max_personas = (casas[i]->cant_personas);
 			(*casa_gobernadora) = casas[i]->nombre;
 		}
+		casas[i]->cant_personas = lista_elementos(casas[i]->lista_personas);
 	}
 }
 
@@ -399,7 +400,7 @@ int listar_casas(abb_t* arbol_casas){
 		ordenar_descentemente(casas, tope_array);
 		printf("\n\nCasas listadas por cantidad de integrantes (en orden descendente): \n");
 		for(int i = 0; i < tope_array; i++){
-			printf("Casa N° %i: %s (%zu integrantes)\n", (i+1), (casas[i]->nombre), (casas[i]->cant_personas));
+			printf("Casa N° %i: %s (%zu integrantes)\n", (i+1), (casas[i]->nombre), casas[i]->cant_personas);
 		}
 
 		printf("\n");
