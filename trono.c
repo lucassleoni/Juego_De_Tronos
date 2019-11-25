@@ -443,6 +443,5 @@ void terminar_simulacion(reino_t* reino){
 		free(reino);
 	}
 
-	//centrar_mensaje("Simulación terminada", "");
-	printf("\nSimulación terminada\n\n");
+	centrar_mensaje("Simulación terminada", "");
 }
