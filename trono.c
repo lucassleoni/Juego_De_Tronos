@@ -15,7 +15,7 @@ void centrar_mensaje(char mensaje_1[], char mensaje_2[]){
 }
 
 void mostrar_menu_ayudas(){
-	//system("clear");
+	system("clear");
 	printf("\t\t\t\t\t\t\t¡Bienvenido al simulador del Juego De Tronos!\n\n");
 	printf("Aquí podrás inventar el paso del tiempo para conocer quién ocupa el Trono de Hierro luego de un lapso establecido...\n\n");
 	printf("A continuación, podrás visualizar el menú de ayudas para guiarte a lo largo de este juego.\n\n");
@@ -188,14 +188,12 @@ int insertar_casas(FILE* archivo, abb_t* arbol_casas){
 }
 
 int agregar_casas(abb_t* arbol_casas){
-	//system("clear");
+	system("clear");
 
-	char f_nombre[MAX_NOMBRE] = "casas.txt";
-	/*
+	char f_nombre[MAX_NOMBRE];
 	printf("Ingrese el nombre del archivo donde se encuentra la casa a cargar: ");
 	scanf("%s", f_nombre);
-	*/
-
+	
 	FILE* f_casas = fopen(f_nombre, M_LECTURA);
 	if(f_casas == NULL){
 		imprimir_mensaje_error(ARCHIVO, f_nombre);
@@ -203,6 +201,10 @@ int agregar_casas(abb_t* arbol_casas){
 	}
 
 	int estado = insertar_casas(f_casas, arbol_casas);
+
+	if(estado == EXITO){
+		printf("¡Archivo cargado con éxito!\n\n");
+	}
 
 	fclose(f_casas);
 
@@ -334,7 +336,7 @@ int simular_tiempo(reino_t* reino, size_t anios_simulados){
 
 int iniciar_simulacion(reino_t* reino){
 	if(arbol_vacio(reino->arbol_casas)){
-		//	("clear");
+		system("clear");
 		printf("\n\n\n\n\n\nNo hay ninguna casa presente en el reino.\n\n\n\n\n\n");
 	}
 	else{
@@ -349,11 +351,11 @@ int iniciar_simulacion(reino_t* reino){
 		}
 
 		if(arbol_cantidad(reino->arbol_casas)){
-			//system("clear");
+			system("clear");
 			printf("\nQuien controla Trono de Hierro ahora es la casa %s\n\n", (reino->casa_gobernadora));
 		}
 		else{
-			//system("clear");
+			system("clear");
 			printf("\n\n\n\n\n\nNo hay ninguna casa presente en el reino.\n\n\n\n\n\n");
 		}
 	}
@@ -385,7 +387,7 @@ void ordenar_descentemente(casa_t** casas, int tope_array){
 
 int listar_casas(abb_t* arbol_casas){
 	if(arbol_vacio(arbol_casas)){
-		//system("clear");
+		system("clear");
 		printf("\n\n\n\n\n\nNo hay ninguna casa presente en el reino.\n\n\n\n\n\n");
 	}
 
@@ -411,14 +413,14 @@ int listar_casas(abb_t* arbol_casas){
 
 void mostrar_casas_extintas(cola_t* casas_extintas){
 	if(cola_vacia(casas_extintas)){
-		//system("clear");
+		system("clear");
 		printf("\n\n\n\n\n\nNo hay casas extintas por listar.\n\n\n\n\n\n");
 	}
 	else{
 		int i = 1;
 		int cant_casas = cola_cantidad(casas_extintas);
 
-		printf("\n\nLas casas extintas (en el orden en que fueron desapareciendo) son: \n\n");
+		printf("\nLas casas extintas (en el orden en que fueron desapareciendo) son: \n\n");
 
 		while(cant_casas > 0){
 			casa_t* casa_aux = cola_primero(casas_extintas);
