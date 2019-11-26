@@ -10,14 +10,18 @@
 
 extern char* strdup(const char*);
 
+// Pre C.:  Recibe dos strings.
+// Post C.: Los imprime en el centro de la pantalla, dejando visible únicamente el mensaje a transmitir.
 void centrar_mensaje(char mensaje_1[], char mensaje_2[]){
 	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\t\t\t\t\t\t\t\t\t %s \n\t\t\t\t\t\t\t\t\t %s \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", mensaje_1, mensaje_2);
 }
 
+// Pre C.:  ---
+// Post C.: Imprime el menú de ayudas/explicación del juego.
 void mostrar_menu_ayudas(){
 	system("clear");
 	printf("\t\t\t\t\t\t\t¡Bienvenido al simulador del Juego De Tronos!\n\n");
-	printf("Aquí podrás inventar el paso del tiempo para conocer quién ocupa el Trono de Hierro luego de un lapso establecido...\n\n");
+	printf("Aquí podrás inventar el paso del tiempo en el reino para conocer quién ocupa el Trono de Hierro luego de un lapso establecido...\n\n");
 	printf("A continuación, podrás visualizar el menú de ayudas para guiarte a lo largo de este juego.\n\n");
 	printf("Para indicar la acción que quieras desarrollar, deberás escribir una de las siguientes letras (mayúsculas):\n\n\n");
 	printf("\t - 'S': Iniciará la simulación (para la que deberás indicar la cantidad de años a simular).\n");
@@ -29,6 +33,8 @@ void mostrar_menu_ayudas(){
 	printf("\t - 'Q': Finalizará la ejecución del simulador.\n\n");
 }
 
+// Pre C.:  Recibe dos strings.
+// Post C.: Imprime un mensaje de error, según los parámetros recibidos.
 void imprimir_mensaje_error(char error[MAX_NOMBRE], char nombre[MAX_NOMBRE]){
 	if(strcmp(error, ARCHIVO) == 0){
 		printf("Hubo un error al abrir el archivo '%s'\n", nombre);
@@ -40,21 +46,25 @@ void imprimir_mensaje_error(char error[MAX_NOMBRE], char nombre[MAX_NOMBRE]){
 	printf("Finalizando programa...\n");
 }
 
-int comparar_elementos(void* elemento_1, void* elemento_2){
-    if((elemento_1 == NULL) || (elemento_2 == NULL)){
+// Pre C.:  Recibe dos punteros a elementos (casas, en este caso).
+// Post C.: Compara las casas por nombre y devuelve un código según si la primera es mayor, menor o igual a la segunda.
+int comparar_casas(void* casa_1, void* casa_2){
+    if((casa_1 == NULL) || (casa_2 == NULL)){
 		return ERROR;
     }
     
-    if(strcmp((((casa_t*)elemento_1)->nombre), (((casa_t*)elemento_2)->nombre)) > 0){
+    if(strcmp((((casa_t*)casa_1)->nombre), (((casa_t*)casa_2)->nombre)) > 0){
 		return PRIMERO_ES_MAYOR;
     }
-    else if(strcmp((((casa_t*)elemento_1)->nombre), (((casa_t*)elemento_2)->nombre)) < 0){
+    else if(strcmp((((casa_t*)casa_1)->nombre), (((casa_t*)casa_2)->nombre)) < 0){
 		return PRIMERO_ES_MENOR;
     }
 
     return IGUALES;
 }
 
+// Pre C.:  Recibe un puntero a una casa.
+// Post C.: La destruye, liberando todos los campos que esta ocupa en el Heap.
 void destruir_casa(void* casa){
 	if(casa != NULL){
 		free(((casa_t*)casa)->nombre);
@@ -63,6 +73,8 @@ void destruir_casa(void* casa){
 	}
 }
 
+// Pre C.:  Recibe un puntero a una persona.
+// Post C.: La destruye, liberando todos los campos que esta ocupa en el Heap.
 void destruir_persona(void* persona){
     if(persona != NULL){
     	free(((persona_t*)persona)->nombre);
@@ -70,6 +82,9 @@ void destruir_persona(void* persona){
     }
 }
 
+// Pre C.:  ---
+// Post C.: Crea la estructura del reino (ABB y cola de casas extintas) e inicializa el nombre de la casa gobernador en NULL.
+// 			Devuelve un puntero a la estructura creada o NULL en caso de error.
 reino_t* inicializar_reino(){
 	reino_t* reino = malloc(sizeof(reino_t));
 	if(reino == NULL){
@@ -77,7 +92,7 @@ reino_t* inicializar_reino(){
 		return NULL;
 	}
 
-	reino->arbol_casas = arbol_crear(comparar_elementos, destruir_casa);
+	reino->arbol_casas = arbol_crear(comparar_casas, destruir_casa);
 	if((reino->arbol_casas) == NULL){
 		free(reino);
 		centrar_mensaje(" Hubo un error al crear el reino", "No se pudo comenzar la simulación");
@@ -97,6 +112,9 @@ reino_t* inicializar_reino(){
 	return reino;
 }
 
+// Pre C.:  Recibe los datos de una persona.
+// Post C.: Crea la estructura de una persona con los datos recibidos.
+// 			Devuelve un puntero a la estructura creada o NULL en caso de error.
 persona_t* crear_persona(char* nombre_persona, size_t edad){
 	persona_t* persona = malloc(sizeof(persona_t));
     if(persona == NULL){
@@ -110,7 +128,13 @@ persona_t* crear_persona(char* nombre_persona, size_t edad){
     return persona;
 }
 
-int agregar_persona(FILE* reino, char* nombre_persona, size_t edad, lista_t* lista_personas, size_t* cant_personas){
+// Pre C.:  Recibe una lista de personas con los datos del integrante, y la cantidad de personas de la lista.
+// Post C.: Inserta la nueva persona en la lista y devuelve el código de éxito '0' o error '-1' al finalizar.
+int agregar_persona(lista_t* lista_personas, char* nombre_persona, size_t edad, size_t* cant_personas){
+	if(lista_personas == NULL){
+		return ERROR;
+	}
+
 	int estado = EXITO;
 	persona_t* persona = crear_persona(strdup(nombre_persona), edad);
 	if(persona == NULL){
@@ -123,6 +147,9 @@ int agregar_persona(FILE* reino, char* nombre_persona, size_t edad, lista_t* lis
 	return estado;
 }
 
+// Pre C.:  Recibe los datos de una casa.
+// Post C.: Crea la estructura de una casa con los datos recibidos.
+// 			Devuelve un puntero a la estructura creada o NULL en caso de error.
 casa_t* crear_casa(char* nombre_casa, size_t factor_env, size_t factor_nac){
     casa_t* casa = malloc(sizeof(casa_t));
     if(casa == NULL){
@@ -145,6 +172,10 @@ casa_t* crear_casa(char* nombre_casa, size_t factor_env, size_t factor_nac){
     return casa;
 }
 
+// Pre C.:  Recibe un puntero a un archivo y a un ABB de casas.
+// Post C.: Lee el archivo y ejecuta la acción correspondiente en caso de haber leído una casa o un indiviuo.
+//			Inserta las casas en un ABB y las personas en la lista de la casa a la que pertenece.
+//			Devuelve el código de éxito '0' o error '-1' al finalizar.
 int insertar_casas(FILE* archivo, abb_t* arbol_casas){
 	casa_t* casa = NULL;
 	char codigo;
@@ -172,7 +203,7 @@ int insertar_casas(FILE* archivo, abb_t* arbol_casas){
 		}
 		else if(codigo == C_PERSONA){
 			fscanf(archivo, FORMATO_PERSONA, nombre_persona, &edad);
-			estado = agregar_persona(archivo, nombre_persona, edad, casa->lista_personas, &(casa->cant_personas));
+			estado = agregar_persona(casa->lista_personas, nombre_persona, edad, &(casa->cant_personas));
 		}
 
 		leido = fscanf(archivo, "%c;", &codigo);
@@ -187,6 +218,9 @@ int insertar_casas(FILE* archivo, abb_t* arbol_casas){
 	return EXITO;
 }
 
+// Pre C.:  Recibe un puntero a un ABB.
+// Post C.: Abre el archivo de casas/personas e invoca a la funcion que los inserta en el ABB.
+//			Devuelve el código de éxito '0' o error '-1' al finalizar.
 int agregar_casas(abb_t* arbol_casas){
 	system("clear");
 
@@ -211,20 +245,27 @@ int agregar_casas(abb_t* arbol_casas){
 	return estado;
 }
 
+// Pre C.:  Recibe punteros a la cola de casas extintas y a una casa.
+// Post C.: En caso de recibir una casa sin integrantes, la marca como 'casa extinta' y encola una copia de la misma.
 void actualizar_casas_extintas(cola_t* casas_extintas, casa_t* casa){
 	if((casa->cant_personas) == 0){
-		casa_t* casa_copia = crear_casa(strdup(casa->nombre), casa->factor_env, casa->factor_nac);
 		casa->es_casa_extinta = true;
+		casa_t* casa_copia = crear_casa(strdup(casa->nombre), casa->factor_env, casa->factor_nac);
 		cola_encolar(casas_extintas, casa_copia);
 	}
 }
 
+// Pre C.:  Recibe un puntero a una lista de personas y un vector de posiciones a borrar (junto con su tope).
+// Post C.: Borra de la lista los elementos de las posiciones que posee el vector.
 void actualizar_decesos(lista_t* lista_personas, size_t* posiciones_a_borrar, size_t tope_borrados){
 	for(int i = 0; i < tope_borrados; i++){
 		lista_borrar_de_posicion(lista_personas, posiciones_a_borrar[i] - i);
 	}
 }
 
+// Pre C.:  Recibe un puntero a una lista de personas y un factor de envejecimiento.
+// Post C.: Suma la edad correspondiente a cada persona, crea un vector con las posiciones de las que
+//			superan la edad máxima establecida e invoca a la función que los elimina de la lista.
 void actualizar_personas(lista_t* lista_personas, size_t factor_env){
 	size_t contador_posicion = 0, tope_borrados = 0;
 	size_t posiciones_a_borrar[lista_elementos(lista_personas)];
@@ -245,14 +286,19 @@ void actualizar_personas(lista_t* lista_personas, size_t factor_env){
 	actualizar_decesos(lista_personas, posiciones_a_borrar, tope_borrados);
 }
 
-void actualizar_casas(reino_t* reino, casa_t** casas, int tope_array){
+// Pre C.:  Recibe un puntero a la cola de casas extinstas y al vector de casas junto con su tope.
+// Post C.: Invoca a la funciones que actualizan la lista de personas de cada casa y las casas extintas.
+//			Actualiza también la cantidad de personas de cada casa.
+void actualizar_casas(cola_t* casas_extintas, casa_t** casas, int tope_array){
 	for(size_t i = 0; i < tope_array; i++){
 		actualizar_personas(casas[i]->lista_personas, casas[i]->factor_env);
 		casas[i]->cant_personas = lista_elementos(casas[i]->lista_personas);
-		actualizar_casas_extintas(reino->casas_extintas, casas[i]);
+		actualizar_casas_extintas(casas_extintas, casas[i]);
 	}
 }
 
+// Pre C.:  Recibe un puntero al ABB y al vector de casas (junto con su tope).
+// Post C.: Borra las casas extintas del vector y del ABB, modificando el tope correctamente.
 void actualizar_vector_casas(abb_t* arbol_casas, casa_t** casas, int* tope_array){
 	int i = 0, j = 0;
 
@@ -270,6 +316,8 @@ void actualizar_vector_casas(abb_t* arbol_casas, casa_t** casas, int* tope_array
 	}
 }
 
+// Pre C.:  Recibe un vector de nombres vacío.
+// Post C.: Abre un archivo de nombres y llena el vector con todos los que encuentre, devolviendo una posicion random del vector.
 int generar_nombre(char nombres[CANT_NOMBRES][MAX_NOMBRE]){
 	FILE* f_nombres = fopen(F_NOMBRES, M_LECTURA);
 	if(nombres == NULL){
@@ -286,6 +334,8 @@ int generar_nombre(char nombres[CANT_NOMBRES][MAX_NOMBRE]){
 	return (rand() % CANT_NOMBRES);
 }
 
+// Pre C.:  Recibe un vector de casas junto con su tope.
+// Post C.: Crea e inserta tantas personas (con un nombre aleatorio) como la cantidad a nacer indica.
 void actualizar_nacimientos(casa_t** casas, int tope_array){
 	char nombres[CANT_NOMBRES][MAX_NOMBRE];
 	size_t cantidad_a_nacer;
@@ -301,6 +351,8 @@ void actualizar_nacimientos(casa_t** casas, int tope_array){
 	}
 }
 
+// Pre C.:  Recibe un vector de casas junto con su tope y el nombre de la casa gobernadora (por referencia)
+// Post C.: Modifica el nombre recibido con el de la casa que posea más integrantes.
 void determinar_casa_gobernadora(casa_t** casas, char** casa_gobernadora, int tope_array){
 	size_t max_personas = 0;
 
@@ -313,6 +365,10 @@ void determinar_casa_gobernadora(casa_t** casas, char** casa_gobernadora, int to
 	}
 }
 
+// Pre C.:  Recibe un puntero a la estructura del reino y la cantidad de años simulados por el usuario.
+// Post C.: Crea un vector con las casas presentes en el ABB e invoca (una vez por cada año) a las funciones
+//			encargadas de actualizar el estado del reino (casas y casas extintas) para finalmente determinar la
+//			casa gobernadora al cabo de los años simulados. Devuelve el código de éxito '0' o error '-1' al finalizar.
 int simular_tiempo(reino_t* reino, size_t anios_simulados){
 	int tope_array = arbol_cantidad(reino->arbol_casas);
 
@@ -324,7 +380,7 @@ int simular_tiempo(reino_t* reino, size_t anios_simulados){
 	}
 
 	for(size_t i = 0; i < anios_simulados; i++){
-		actualizar_casas(reino, casas, tope_array);
+		actualizar_casas(reino->casas_extintas, casas, tope_array);
 		actualizar_vector_casas(reino->arbol_casas, casas, &tope_array);
 		actualizar_nacimientos(casas, tope_array);
 	}
@@ -334,6 +390,9 @@ int simular_tiempo(reino_t* reino, size_t anios_simulados){
 	return EXITO;
 }
 
+// Pre C.:  Recibe un puntero a la estructura del reino.
+// Post C.: Pide al usuario la cantidad de años a simular y simula dicho tiempo.
+//			Imprime por pantalla la casa que gobierna el reino luego de los años simulados.
 int iniciar_simulacion(reino_t* reino){
 	if(arbol_vacio(reino->arbol_casas)){
 		system("clear");
@@ -363,6 +422,8 @@ int iniciar_simulacion(reino_t* reino){
 	return EXITO;
 }
 
+// Pre C.:  Recibe un vector de casas junto con su tope.
+// Post C.: Lo ordena descentemente según la cantidad de integrante de cada una.
 void ordenar_descentemente(casa_t** casas, int tope_array){
 	bool esta_ordenado = false;
 
@@ -385,6 +446,8 @@ void ordenar_descentemente(casa_t** casas, int tope_array){
 	}
 }
 
+// Pre C.:  Recibe un puntero a un ABB.
+// Post C.: Imprime por pantalla una lista de la casas por orden descendente de cantidad de integrantes.
 int listar_casas(abb_t* arbol_casas){
 	if(arbol_vacio(arbol_casas)){
 		system("clear");
@@ -411,6 +474,8 @@ int listar_casas(abb_t* arbol_casas){
 	return EXITO;
 }
 
+// Pre C.:  Recibe un puntero a la cola de casas extintas.
+// Post C.: Imprime por pantalla las casas extintas en el orden en que fueron desapareciendo.
 void mostrar_casas_extintas(cola_t* casas_extintas){
 	if(cola_vacia(casas_extintas)){
 		system("clear");
@@ -436,6 +501,8 @@ void mostrar_casas_extintas(cola_t* casas_extintas){
 	}
 }
 
+// Pre C.:  Recibe un puntero a la estructura del reino.
+// Post C.: Libera toda la memeoria ocupada por la el juego, imprimiendo por pantalla que la simulación ha terminado.
 void terminar_simulacion(reino_t* reino){
 	if(reino != NULL){
 		arbol_destruir(reino->arbol_casas);

@@ -8,6 +8,8 @@
 #include "cola.h"
 #include "trono.h"
 
+// Pre C.:  Recibe el caracter ingresado por el usario.
+// Post C.: Devuelve 'true' solo si el caracter corresponde a una de las acciones válidas establecidas según el menú de ayudas.
 bool es_comando_valido(char accion){
 	return ((accion == INICIAR) || (accion == AGREGAR) || (accion == LISTAR) || (accion == MOSTRAR) || (accion == AYUDAS));
 }
