@@ -16,7 +16,7 @@ void centrar_mensaje(char mensaje_1[], char mensaje_2[]){
 	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\t\t\t\t\t\t\t\t\t %s \n\t\t\t\t\t\t\t\t\t %s \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", mensaje_1, mensaje_2);
 }
 
-// Pre C.:  ---
+// Pre C.:  El reino debe haber sido correctamente inicializado para que esta función sea invocada.
 // Post C.: Imprime el menú de ayudas/explicación del juego.
 void mostrar_menu_ayudas(){
 	system("clear");
@@ -37,13 +37,12 @@ void mostrar_menu_ayudas(){
 // Post C.: Imprime un mensaje de error, según los parámetros recibidos.
 void imprimir_mensaje_error(char error[MAX_NOMBRE], char nombre[MAX_NOMBRE]){
 	if(strcmp(error, ARCHIVO) == 0){
-		printf("Hubo un error al abrir el archivo '%s'\n", nombre);
+		printf("\n\nHubo un error al abrir el archivo '%s'\n", nombre);
+		printf("No se cargaron las casas.\n\n\n");
 	}
 	else if(strcmp(error, CREAR) == 0){
 		printf("Hubo un error al crear la estructura '%s'\n", nombre);
 	}
-
-	printf("Finalizando programa...\n");
 }
 
 // Pre C.:  Recibe dos punteros a elementos (casas, en este caso).
@@ -371,7 +370,6 @@ void determinar_casa_gobernadora(casa_t** casas, char** casa_gobernadora, int to
 //			casa gobernadora al cabo de los años simulados. Devuelve el código de éxito '0' o error '-1' al finalizar.
 int simular_tiempo(reino_t* reino, size_t anios_simulados){
 	int tope_array = arbol_cantidad(reino->arbol_casas);
-
 	casa_t* casas[tope_array];
 	
 	int elementos_recorridos = arbol_recorrido_inorden(reino->arbol_casas, (void**)casas, tope_array);
@@ -511,4 +509,53 @@ void terminar_simulacion(reino_t* reino){
 	}
 
 	centrar_mensaje("Simulación terminada", "");
+}
+
+// Pre C.:  Recibe el caracter ingresado por el usario.
+// Post C.: Devuelve 'true' solo si el caracter corresponde a una de las acciones válidas establecidas según el menú de ayudas.
+bool es_comando_valido(char accion){
+	return ((accion == INICIAR) || (accion == AGREGAR) || (accion == LISTAR) || (accion == MOSTRAR) || (accion == AYUDAS));
+}
+
+// Pre C.:  Recibe un puntero al reino.
+// Post C.: Determina y ejecuta la acción pedida por el usuario por medio del caracter solicitado.
+int determinar_accion(reino_t* reino){
+	int estado = EXITO;
+	char accion;
+
+	mostrar_menu_ayudas();
+
+	printf("Ingrese una letra: ");
+	scanf(" %c", &accion);
+
+	while((accion != FINALIZAR) && (estado == EXITO)){
+		switch(accion){
+			case INICIAR: estado = iniciar_simulacion(reino);
+				break;
+
+			case AGREGAR: estado = agregar_casas(reino->arbol_casas);
+				break;
+
+			case LISTAR: estado = listar_casas(reino->arbol_casas);
+				break;
+
+			case MOSTRAR: mostrar_casas_extintas(reino->casas_extintas);
+				break;
+
+			case AYUDAS: mostrar_menu_ayudas();
+				break;
+			
+			default: printf("\nPor favor, ingrese un comando válido: ");
+				break;
+		}
+
+		if(es_comando_valido(accion)){
+			printf("Ingrese su próxima acción a realizar o 'Q' para finalizar;\n");
+			printf("si desea mostrar el menú de ayudas, ingrese 'H': ");
+		}
+		
+		scanf(" %c", &accion);
+	}
+
+	return estado;
 }

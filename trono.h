@@ -63,28 +63,10 @@ typedef struct reino{
 	char* casa_gobernadora;
 } reino_t;
 
-int comparar_elementos(void* elemento_1, void* elemento_2);
-
-void destruir_casa(void* casa);
-
-void imprimir_mensaje_error(char error[MAX_NOMBRE], char nombre[MAX_NOMBRE]);
-
-void mostrar_introduccion();
-
-void mostrar_menu_ayudas();
-
 reino_t* inicializar_reino();
 
-int iniciar_simulacion(reino_t* reino);
-
-int agregar_casas(abb_t* arbol_casas);
-
-int listar_casas(abb_t* arbol_casas);
-
-void mostrar_casas_extintas(cola_t* casas_extintas);
+int determinar_accion(reino_t* reino);
 
 void terminar_simulacion(reino_t* reino);
-
-void centrar_mensaje(char mensaje_1[], char mensaje_2[]);
 
 #endif /* __TRONO_H__ */
