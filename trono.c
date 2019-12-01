@@ -257,7 +257,7 @@ void actualizar_casas_extintas(cola_t* casas_extintas, casa_t* casa){
 // Pre C.:  Recibe un puntero a una lista de personas y un vector de posiciones a borrar (junto con su tope).
 // Post C.: Borra de la lista los elementos de las posiciones que posee el vector.
 void actualizar_decesos(lista_t* lista_personas, size_t* posiciones_a_borrar, size_t tope_borrados){
-	for(int i = 0; i < tope_borrados; i++){
+	for(size_t i = 0; i < tope_borrados; i++){
 		lista_borrar_de_posicion(lista_personas, posiciones_a_borrar[i] - i);
 	}
 }
@@ -423,10 +423,8 @@ int iniciar_simulacion(reino_t* reino){
 // Pre C.:  Recibe un vector de casas junto con su tope.
 // Post C.: Lo ordena descentemente según la cantidad de integrante de cada una.
 void ordenar_descentemente(casa_t** casas, int tope_array){
-	bool esta_ordenado = false;
-
 	for(int i = 0; i < tope_array; i++){
-		int max_integrantes = casas[i]->cant_personas;
+		size_t max_integrantes = casas[i]->cant_personas;
 		int posicion_swap = -1;
 		
 		for(int j = i + 1; j < tope_array; j++){
